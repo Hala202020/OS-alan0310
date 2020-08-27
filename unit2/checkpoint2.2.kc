@@ -1,0 +1,344 @@
+import"string"
+//Use a linker definition file (put the previous listing into that file)
+#pragma link("mega65hyper.ld")
+//Some definitions of addresses and special valves that this peogram uses
+const char* RASTER = 0xd012;
+const char* VIC_MEMORY = 0xd018;
+const char* SCREEN = 0x0400;
+const char* BGCOL = 0xd021;
+const char* COLS = 0xd800;
+const char BLACK = 0;
+const char WHITE = 1;
+//Some text to display
+char[] MESSAGE = "checkpoint2.2 by alan0310";
+void main() {
+//Initialize screen memory, and select correct font
+*VIC_MEMORY = 0x14;
+//Fill the screen with spaces
+memset(SCREEN, ' ' , 40*25);
+//Set the colour of every character on the screen to white
+memset(COLS, WHITE, 40*25);
+//Print the "hello world!" message
+char* sc = SCREEN+40; //Display it one line down on the screen 
+char* msg = MESSAGE; //The messag to display
+// A simple copy routine to copy the string 
+while(*msg) {
+*sc++ = *msg++;
+}
+//Loop forever showing two white lines as raster bars
+while(true) {
+  if(*RASTER==54 || *RASTER==66) {
+    *BGCOL = WHITE;
+  } else {
+    *BGCOL = BLACK;
+  }
+  }
+}
+//Here are a couple sample SYSCALL handlers that iust display a character on the screen 
+void syscall1() { 
+*(SCREEN+79) = '>';
+}
+void syscall2() {
+*(SCREEN+78) = '<';
+}
+void SYSCALL00() {
+}
+void SYSCALL01() {
+}
+void SYSCALL02() {
+}
+void SYSCALL03() {
+}
+void SYSCALL04() {
+}
+void SYSCALL05() {
+}
+void SYSCALL06() {
+}
+void SYSCALL07() {
+}
+void SYSCALL08() {
+}
+void SYSCALL09() {
+}
+void SYSCALL0A() {
+}
+void SYSCALL0B() {
+}
+void SYSCALL0C() {
+}
+void SYSCALL0D() {
+}
+void SYSCALL0E() {
+}
+void SYSCALL0F() {
+}
+void SYSCALL10() {
+}
+void SECURENTR() {
+}
+void SECUREXIT() {
+}
+void SYSCALL13() {
+}
+void SYSCALL14() {
+}
+void SYSCALL15() {
+}
+void SYSCALL16() {
+}
+void SYSCALL17() {
+}
+void SYSCALL18() {
+}
+void SYSCALL19() {
+}
+void SYSCALL1A() {
+}
+void SYSCALL1B() {
+}
+void SYSCALL1C() {
+}
+void SYSCALL1D() {
+}
+void SYSCALL1E() {
+}
+void SYSCALL1F() {
+}
+void SYSCALL20() {
+}
+void SYSCALL21() {
+}
+void SYSCALL22() {
+}
+void SYSCALL23() {
+}
+void SYSCALL24() {
+}
+void SYSCALL25() {
+}
+void SYSCALL26() {
+}
+void SYSCALL27() {
+}
+void SYSCALL28() {
+}
+void SYSCALL29() {
+}
+void SYSCALL2A() {
+}
+void SYSCALL2B() {
+}
+void SYSCALL2C() {
+}
+void SYSCALL2D() {
+}
+void SYSCALL2E() {
+}
+void SYSCALL2F() {
+}
+void SYSCALL30() {
+}
+void SYSCALL31() {
+}
+void SYSCALL32() {
+}
+void SYSCALL33() {
+}
+void SYSCALL34() {
+}
+void SYSCALL35() {
+}
+void SYSCALL36() {
+}
+void SYSCALL37() {
+}
+void SYSCALL38() {
+}
+void SYSCALL39() {
+}
+void SYSCALL3A() {
+}
+void SYSCALL3B() {
+}
+void SYSCALL3C() {
+}
+void SYSCALL3D() {
+}
+void SYSCALL3E() {
+}
+void SYSCALL3F() {
+}
+void RESET() {
+}
+void PAGFAULT() {
+}
+void RESTORKEY() {
+}
+void ALTTABKEY() {
+}
+void VF011RD() {
+}
+void VF011WR() {
+}
+void UNDEFINE_TRAP() {
+}
+void CPUKIL() {
+}
+
+
+//Now we select the SYSCALL segment to hold the SYSCALL/trap entry point table.
+#pragma data_seg(Syscall)
+// The structure of each entry point is JMP <handler sddress> + NOp.
+// We have a char 9xjmp) to hold the opcode for the JMP instruction,
+// and then put the address of the SYSCALL/trap handler in the next
+// two points as a pointer, and end with the NoP instruction opcode.
+struct Syscall {
+char xjmp; 
+void()* syscall;
+char xnop;
+};
+
+const char JMP = 0x4c;
+const char NOP = 0xea;
+
+export struct Syscall[] SYSCALLS = {
+{ JMP, &SYSCALL00, NOP },
+{ JMP, &SYSCALL01, NOP },
+{ JMP, &SYSCALL02, NOP },
+{ JMP, &SYSCALL03, NOP },
+{ JMP, &SYSCALL04, NOP },
+{ JMP, &SYSCALL05, NOP },
+{ JMP, &SYSCALL06, NOP },
+{ JMP, &SYSCALL07, NOP },
+{ JMP, &SYSCALL08, NOP },
+{ JMP, &SYSCALL09, NOP },
+{ JMP, &SYSCALL0A, NOP },
+{ JMP, &SYSCALL0B, NOP },
+{ JMP, &SYSCALL0C, NOP },
+{ JMP, &SYSCALL0D, NOP },
+{ JMP, &SYSCALL0E, NOP },
+{ JMP, &SYSCALL0F, NOP },
+{ JMP, &SYSCALL10, NOP },
+{ JMP, &SECURENTR, NOP },
+{ JMP, &SECUREXIT, NOP },
+{ JMP, &SYSCALL13, NOP },
+{ JMP, &SYSCALL14, NOP },
+{ JMP, &SYSCALL15, NOP },
+{ JMP, &SYSCALL16, NOP },
+{ JMP, &SYSCALL17, NOP },
+{ JMP, &SYSCALL18, NOP },
+{ JMP, &SYSCALL19, NOP },
+{ JMP, &SYSCALL1A, NOP },
+{ JMP, &SYSCALL1B, NOP },
+{ JMP, &SYSCALL1C, NOP },
+{ JMP, &SYSCALL1D, NOP },
+{ JMP, &SYSCALL1E, NOP },
+{ JMP, &SYSCALL1F, NOP },
+{ JMP, &SYSCALL20, NOP },
+{ JMP, &SYSCALL21, NOP },
+{ JMP, &SYSCALL20, NOP },
+{ JMP, &SYSCALL23, NOP },
+{ JMP, &SYSCALL24, NOP },
+{ JMP, &SYSCALL25, NOP },
+{ JMP, &SYSCALL26, NOP },
+{ JMP, &SYSCALL27, NOP },
+{ JMP, &SYSCALL28, NOP },
+{ JMP, &SYSCALL29, NOP },
+{ JMP, &SYSCALL2A, NOP },
+{ JMP, &SYSCALL2B, NOP },
+{ JMP, &SYSCALL2C, NOP },
+{ JMP, &SYSCALL2D, NOP },
+{ JMP, &SYSCALL2E, NOP },
+{ JMP, &SYSCALL2F, NOP },
+{ JMP, &SYSCALL30, NOP },
+{ JMP, &SYSCALL31, NOP },
+{ JMP, &SYSCALL32, NOP },
+{ JMP, &SYSCALL33, NOP },
+{ JMP, &SYSCALL34, NOP },
+{ JMP, &SYSCALL35, NOP },
+{ JMP, &SYSCALL36, NOP },
+{ JMP, &SYSCALL37, NOP },
+{ JMP, &SYSCALL38, NOP },
+{ JMP, &SYSCALL39, NOP },
+{ JMP, &SYSCALL3A, NOP },
+{ JMP, &SYSCALL3B, NOP },
+{ JMP, &SYSCALL3C, NOP },
+{ JMP, &SYSCALL3D, NOP },
+{ JMP, &SYSCALL3E, NOP },
+{ JMP, &SYSCALL3F, NOP }
+};
+// In this example 
+
+export align(0x100) struct Syscall[] SYSCALL_TRAPS = {
+{ JMP, &main, NOP},
+{ JMP, &RESET, NOP},
+{ JMP, &PAGFAULT, NOP},
+{ JMP, &RESTORKEY, NOP},
+{ JMP, &ALTTABKEY, NOP},
+{ JMP, &VF011RD, NOP},
+{ JMP, &VF011WR, NOP},
+{ JMP, &UNDEFINE_TRAP, NOP} ,
+{ JMP, &UNDEFINE_TRAP, NOP} ,
+{ JMP, &UNDEFINE_TRAP, NOP} ,
+{ JMP, &UNDEFINE_TRAP, NOP} ,
+{ JMP, &UNDEFINE_TRAP, NOP} ,
+{ JMP, &UNDEFINE_TRAP, NOP} ,
+{ JMP, &UNDEFINE_TRAP, NOP} ,
+{ JMP, &UNDEFINE_TRAP, NOP} ,
+{ JMP, &UNDEFINE_TRAP, NOP} ,
+{ JMP, &UNDEFINE_TRAP, NOP} ,
+{ JMP, &UNDEFINE_TRAP, NOP} ,
+{ JMP, &UNDEFINE_TRAP, NOP} ,
+{ JMP, &UNDEFINE_TRAP, NOP} ,
+{ JMP, &UNDEFINE_TRAP, NOP} ,
+{ JMP, &UNDEFINE_TRAP, NOP} ,
+{ JMP, &UNDEFINE_TRAP, NOP} ,
+{ JMP, &UNDEFINE_TRAP, NOP} ,
+{ JMP, &UNDEFINE_TRAP, NOP} ,
+{ JMP, &UNDEFINE_TRAP, NOP} ,
+{ JMP, &UNDEFINE_TRAP, NOP} ,
+{ JMP, &UNDEFINE_TRAP, NOP} ,
+{ JMP, &UNDEFINE_TRAP, NOP} ,
+{ JMP, &UNDEFINE_TRAP, NOP} ,
+{ JMP, &UNDEFINE_TRAP, NOP} ,
+{ JMP, &UNDEFINE_TRAP, NOP} ,
+{ JMP, &UNDEFINE_TRAP, NOP} ,
+{ JMP, &UNDEFINE_TRAP, NOP} ,
+{ JMP, &UNDEFINE_TRAP, NOP} ,
+{ JMP, &UNDEFINE_TRAP, NOP} ,
+{ JMP, &UNDEFINE_TRAP, NOP} ,
+{ JMP, &UNDEFINE_TRAP, NOP} ,
+{ JMP, &UNDEFINE_TRAP, NOP} ,
+{ JMP, &UNDEFINE_TRAP, NOP} ,
+{ JMP, &UNDEFINE_TRAP, NOP} ,
+{ JMP, &UNDEFINE_TRAP, NOP} ,
+{ JMP, &UNDEFINE_TRAP, NOP} ,
+{ JMP, &UNDEFINE_TRAP, NOP} ,
+{ JMP, &UNDEFINE_TRAP, NOP} ,
+{ JMP, &UNDEFINE_TRAP, NOP} ,
+{ JMP, &UNDEFINE_TRAP, NOP} ,
+{ JMP, &UNDEFINE_TRAP, NOP} ,
+{ JMP, &CPUKIL, NOP} 
+
+};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
