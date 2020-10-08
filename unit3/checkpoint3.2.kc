@@ -38,7 +38,7 @@ current_screen_x++;
  unsigned short mem_end = $7fff;
  volatile unsigned char *p;
  volatile unsigned char x;
- for ( p = mem_start; p < mem_end; p++) {
+ for ( p = mem_start; p <= mem_end; p++) {
  for (x = 0; x < 255; x++) {
  *p = x;
  if (*p != x) {
