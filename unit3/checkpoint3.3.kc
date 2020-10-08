@@ -15,17 +15,17 @@ import "string"
 	unsigned short mem_end = $0800;
 	unsigned short mem_current = $0800;
 	
-	char detect_vicii(unsigned short num)
+	char detect_vicii(unsigned short adress)
 	{
 	char result =1;
 	volatile unsigned char *p;
 	unsigned char v1, v2;
 	unsigned short i;
-	p=num;
+	p=adress;
 	v1=p[$12];
 	for(i=0;i<1000;i++) continue;
 	v2=p[$12];
-	if (v2>v1){
+	if (v2 != v1){
 	result=1;
 	}
 	else{
