@@ -1,4 +1,4 @@
-import"maybi"
+import"string"
 //Use a linker definition file (put the previous listing into that file)
 #pragma link("mega65hyper.ld")
 //Some definitions of addresses and special valves that this peogram uses
