@@ -1,9 +1,7 @@
-import"string"
+import"maybi"
 //Use a linker definition file (put the previous listing into that file)
-
 #pragma link("mega65hyper.ld")
 //Some definitions of addresses and special valves that this peogram uses
-
 const char* RASTER = 0xd012;
 const char* VIC_MEMORY = 0xd018;
 const char* SCREEN = 0x0400;
@@ -12,10 +10,12 @@ const char* COLS = 0xd800;
 const char BLACK = 0;
 const char WHITE = 1;
 //Some text to display
-char[] MESSAGE = "checkpoint4.1 by alan0310";
-
+char[] MESSAGE = "checkpoint4.3 by ";
+volatile unsigned char *current_screen_line;
+volatile unsigned char current_screen_x;
 
 void main() {
+
 }
 
 void start_simple_program(){
@@ -44,13 +44,29 @@ void start_simple_program(){
 *(unsigned short*)$D648=$080D;
 exit_hypervisor();
 }
- void syscall00() {
- exit_hypervisor();
- }
- void syscall01() {
- exit_hypervisor();
- }
- void syscall02() {
+
+void print_newline(){
+current_screen_line = current_screen_line + $28;
+current_screen_x=0;
+}
+void print_to_screen(char *message){
+char* sc = current_screen_line+current_screen_x;
+while(*message){
+*sc++=*message++;
+}
+}
+void syscall00(){
+print_newline();
+print_to_screen("syscall00 entered");
+print_newline();
+exit_hypervisor();
+}
+void syscall01(){
+print_to_screen("syscall01 entered");
+print_newline();
+exit_hypervisor();
+}
+void syscall02() {
  exit_hypervisor();
  }
  void syscall03() {
@@ -236,20 +252,19 @@ exit_hypervisor();
  void syscall3F() {
  exit_hypervisor();
  }
-
 void RESET() {
-//Initialize screen memory, and select correct font
+current_screen_line = $0400;
+current_screen_x = 0;            
 *VIC_MEMORY = 0x14;
-//Fill the screen with spaces
-memset(SCREEN, ' ' , 40*25);
-//Set the colour of every character on the screen to white
-memset(COLS, WHITE, 40*25);
-
-char* sc = SCREEN+40; //Display it one line down on the screen 
-char* msg = MESSAGE; //The messag to display
-// A simple copy routine to copy the string 
-while(*msg) {
-*sc++ = *msg++;
+memset(SCREEN,' ',40*25);
+ memset(COLS, WHITE, 40*25);
+//char* sc=SCREEN+40;
+//char* msg = MESSAGE;
+ while(false){
+if(*RASTER==54 || *RASTER==65){
+*BGCOL = WHITE;
+exit_hypervisor();
+}
 }
 print_to_screen(MESSAGE);
 
@@ -284,8 +299,6 @@ exit_hypervisor();
 void exit_hypervisor(){
 *(unsigned char*)$D67F=$01;
 }
-
-
 //Now we select the SYSCALL segment to hold the SYSCALL/trap entry point table.
 #pragma data_seg(Syscall)
 // The structure of each entry point is JMP <handler sddress> + NOp.
@@ -367,7 +380,9 @@ export struct Syscall[] SYSCALLS = {
   { JMP, &syscall3E, NOP },
   { JMP, &syscall3F, NOP }
 };
-// In this example 
+// In this example we had only two SYSCALLs defined, so rather than having
+// another 62 lines, we can just ask KickC to make the TRAP table begin
+// at the next multiple of $100, i.e., at $8100.
 
 export align(0x100) struct Syscall[] SYSCALL_TRAPS = {
 { JMP, &RESET, NOP},
@@ -419,23 +434,3 @@ export align(0x100) struct Syscall[] SYSCALL_TRAPS = {
 { JMP, &UNDEFINE_TRAP, NOP}
 
 };
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
