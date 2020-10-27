@@ -18,14 +18,20 @@ const char BLACK = 0;
 const char BLUE = 6;
 const char WHITE = 1;
 
-char[] MESSAGE = "checkpoint 5.2";
+char[] MESSAGE = "checkpoint 5.4";
 
 const unsigned char STATE_NOTRUNNING = $00;
-const unsigned char STATE_RUNNING = $01;
+
+const unsigned char STATE_NEW = $01;
+const unsigned char STATE_READY = $02;
+const unsigned char STATE_READYSUSPENDED = $03;
+const unsigned char STATE_BLOCKEDSUSPENDED = $04;
+const unsigned char STATE_BLOCKED = $05;
+const unsigned char STATE_RUNNING = $06;
+const unsigned char STATE_EXIT = $07;
 
 // Process Descriptor Block definition
-struct process_descriptor_block 
-{
+struct process_descriptor_block {
 	// Unique identifier for the process
 	unsigned char process_id;
 
@@ -44,7 +50,7 @@ struct process_descriptor_block
 	// Stored registers and related machine state for this
 	// process (for the $D640-$D67E machine state registers)
 	unsigned char * stored_state;
- 
+
 };
 
 // Process stored state will live at $C000-$C7FF, with 256 bytes
@@ -55,11 +61,12 @@ const char *process_names = $C800;
 // 8 processes x 64 bytes context state = 512 bytes
 const unsigned char *process_context_states = $C900;
 
+// Which is the current running process?
+volatile unsigned char running_pdb=$ff;
+volatile unsigned char next_pdb=$ff;
 
-
-volatile unsigned char *current_screen_line = SCREEN;
-volatile unsigned char current_screen_x = 0;
-volatile unsigned char pid_counter = 0;
+// Counter for helping determine the next available proccess ID.
+volatile unsigned char pid_counter=0;
 
 unsigned char next_free_pid()
 {
@@ -67,7 +74,7 @@ unsigned char next_free_pid()
 
   // Start with the next process ID
   unsigned char pid=++pid_counter;
-
+	
   // then make sure that it isn't currently in use by another process
   // This loop must terminate according to the Pigeon Hole Principlle,
   // i.e., there are more possible PIDs than there are processes, so
@@ -77,13 +84,290 @@ unsigned char next_free_pid()
     stepped=0;
     for(i=0;i<8;i++) {
       struct process_descriptor_block *p
-        =(struct process_descriptor_block*)((unsigned short)stored_pdbs+(i<<8));
+	=(struct process_descriptor_block*)((unsigned short)stored_pdbs+(i<<8));
       if (pid==p->process_id) { pid++; stepped=1; }
     }
   }
-
+  
   return pid;
 }
+
+void describe_pdb(unsigned char pdb_number)
+{
+  unsigned char i;
+  struct process_descriptor_block *p
+    =(struct process_descriptor_block *)(((unsigned short)stored_pdbs)+(((unsigned short)pdb_number)<<8));
+
+  print_to_screen("pdb#");
+  print_hex((word)pdb_number);
+  print_to_screen(":");
+  print_newline();
+
+  print_to_screen("  pid:          ");
+  print_hex((word)p->process_id);
+  print_newline();
+
+  print_to_screen("  state:        ");
+  switch(p->process_state) {
+	case STATE_NEW: print_to_screen("new"); break;
+	case STATE_RUNNING: print_to_screen("running"); break;
+	case STATE_BLOCKED: print_to_screen("blocked"); break;
+	case STATE_READY: print_to_screen("ready"); break;
+	case STATE_BLOCKEDSUSPENDED: print_to_screen("blockedsuspended"); break;
+	case STATE_READYSUSPENDED: print_to_screen("readysuspended"); break;
+	case STATE_EXIT: print_to_screen("exit"); break;
+	default:
+	   // Unknown state
+	   print_hex((word)p->process_state);
+  }
+  print_newline();
+
+  print_to_screen("  process name: ");
+  char *n=p->process_name;
+  for(i=0;n[i];i++) {
+    print_char(n[i]);
+  }
+  print_newline();
+
+  print_to_screen("  mem start:    $");
+  print_dhex(p->storage_start_address);
+  print_newline();
+
+  print_to_screen("  mem end:      $");
+  print_dhex(p->storage_end_address);
+  print_newline();
+
+  print_to_screen("  pc:           $");
+  unsigned short *ss=p->stored_state;
+  print_hex(ss[4]);
+  print_newline();
+
+
+}
+
+// Setup a new process descriptor block
+void initialise_pdb(unsigned char pdb_number,char *name)
+{
+  unsigned char i;
+
+  struct process_descriptor_block *p
+    =(struct process_descriptor_block *)(((unsigned short)stored_pdbs)+(((unsigned short)pdb_number)<<8));
+
+  // Setup process ID
+  p->process_id =  next_free_pid();
+
+  // Setup process name 
+  p->process_name=process_names+(((short)i)<<5);
+  
+  //XXX - copy the string in the array 'name' into the array 'p->process_name'
+  char *pn=p->process_name;
+  for (i=0;i<17;i++)  	pn[i]=name[i];
+
+  // Set process state as not running.
+  p->process_state	= STATE_NOTRUNNING;
+
+
+  // Set stored memory area
+  p->storage_start_address=$30000 + (((unsigned dword)pdb_number)*$2000);
+
+  //XXX - Then do the same for the end address of the process
+  p->storage_end_address = $31FFF + (((unsigned dword)pdb_number)*$2000);
+
+  // Initialise processor state for standard entry at $080D
+  // Everything to zero, except for a few things we will set manually
+
+  // 64 bytes context switching state for each process
+  p->stored_state=process_context_states+(((unsigned short)pdb_number)<<6);
+  unsigned char *ss=p->stored_state;
+
+  //XXX - Set all 64 bytes of the array 'ss' to zero, to clear the context
+  //switching state
+  for(i=0;i<64;i++) ss[i] = $00;
+
+  // Set tandard CPU flags (8-bit stack, interrupts disabled)
+  ss[7] = $24;
+
+  //XXX - Set the stack pointer to $01FF
+  int x = 5;   //unsigned word SPL = $D645; x = <(<SPL) //x = SPL & 0x000f
+  *(unsigned short *)&ss[x] = $01FF;
+
+  //XXX - Set the program counter to $080D  
+  x = 8;   //unsigned word PCL = $D648; x = <(<PCL) //x = PCL & 0x000f
+  *(unsigned short *)&ss[8] =  $080D;
+
+  return;
+}
+
+void resume_pdb(unsigned char pdb_number)
+{
+  struct process_descriptor_block *p
+    =(struct process_descriptor_block *)(((unsigned short)stored_pdbs)+(((unsigned short)pdb_number)<<8));
+
+  // Copy stored memory into place
+  // Copy from $0000-$03FF and $0800-$1FFF, so that we don't overwrite
+  // the screen 
+  //XXX - Copy $0400 bytes from p->storage_start_address to location $0000
+   unsigned short i = 0;
+  unsigned long src = p->storage_start_address;
+  unsigned long dest = $0000;
+  dma_copy(src,dest,$0400);
+
+  
+  //XXX - Copy $1800 bytes from p->storage_start_address+$0800 to location $0800
+  //      (Use (unsigned dword)(p->storage_start_address)+offset to pass these
+  //       addresses in calls to dma_copy() to cast them to the correct type.)
+	src = (unsigned dword)(p->storage_start_address)+$0800;
+  dest = $0800;
+  dma_copy(src,dest,$1800);
+
+  // Load stored CPU state into Hypervisor saved register area at $FFD3640
+  unsigned char *ss=p->stored_state;
+  //XXX - Use a for() loop to copy 63 bytes from ss[0]--ss[62] to ((unsigned char *)$D640)[0]
+  //      -- ((unsigned char *)$D640)[62] (dma_copy doesn't work for this for some slightly
+  //      complex reasons.)     
+	for(i =0;i<63;i++) ((unsigned char *)$D640)[i] = ss[i];
+
+  // Set state of process to running
+  //XXX - Set p->process_state to STATE_RUNNING
+  p->process_state = STATE_RUNNING;
+
+  // Mark this PDB as the running process
+  //XXX - Set running_pdb to the PDB number we are resuming
+  running_pdb = pdb_number;
+
+  // Exit hypervisor and cause CPU register values (including PC) to be restored from
+  // those loaded from p->stored_state
+  exit_hypervisor();
+}
+
+void pause_pdb(unsigned char pdb_number)
+{
+  struct process_descriptor_block *p
+    =(struct process_descriptor_block *)(((unsigned short)stored_pdbs)+(((unsigned short)pdb_number)<<8));
+
+  // Copy from memory into process descriptor block storage 
+  // Copy from $0000-$03FF and $0800-$1FFF, so that we don't overwrite
+  // the screen 
+  //XXX - Copy $0400 bytes from p->storage_start_address to location $0000
+   unsigned short i = 0;
+  unsigned long dest = p->storage_start_address;
+  unsigned long src = $0000;
+  dma_copy(src,dest,$0400);
+
+  
+  //XXX - Copy $1800 bytes to p->storage_start_address+$0800 from location $0800
+  //      (Use (unsigned dword)(p->storage_start_address)+offset to pass these
+  //       addresses in calls to dma_copy() to cast them to the correct type.)
+	dest = (unsigned dword)(p->storage_start_address)+$0800;
+  src = $0800;
+  dma_copy(src,dest,$1800);
+
+  // Load stored CPU state into Hypervisor saved register area at $FFD3640
+  unsigned char *ss=p->stored_state;
+  //XXX - Use a for() loop to copy 63 bytes from ((unsigned char *)$D640)[0] to ss[0]--ss[62]
+  //      -- ((unsigned char *)$D640)[62] (dma_copy doesn't work for this for some slightly
+  //      complex reasons.)     
+	for(i =0;i<63;i++) ss[i] = ((unsigned char *)$D640)[i];
+
+  // Set state of process to running
+  //XXX - Set p->process_state to STATE_READY
+  p->process_state = STATE_READY;
+
+  // Mark this PDB as the running process
+  //XXX - Erase running pdb value
+  running_pdb = 0;
+
+}
+
+void yield()
+{  
+	unsigned char i;
+	unsigned char prev_pdb_number = running_pdb;
+	
+	pause_pdb(running_pdb); 
+  for(i=0;i<8;i++) {
+		struct process_descriptor_block *pdb =(struct process_descriptor_block*)
+		((unsigned short)stored_pdbs+((unsigned short )(i)<<8));
+		if (pdb->process_state == STATE_READY &&  prev_pdb_number != i)
+			resume_pdb(i);
+	}
+	// 	struct process_descriptor_block *pdb =(struct process_descriptor_block*)
+ 	//	((unsigned short)stored_pdbs+(((unsigned short)next_pdb)<<8));
+
+}
+
+struct dma_list {
+  unsigned char request_format0a;
+  unsigned char source_mb_option80;
+  unsigned char source_mb;
+  unsigned char dest_mb_option81;
+  unsigned char dest_mb;
+  unsigned char end_of_options00;
+  
+  unsigned char cmd; // $00 = copy + end of list
+  unsigned short size;
+  unsigned short source_addr;
+  unsigned char source_bank;
+  unsigned short dest_addr;
+  unsigned char dest_bank;
+  unsigned char modulo00;
+
+};
+
+void dma_copy(unsigned long src,unsigned long dest,unsigned short length)
+{
+  struct dma_list list;
+  list.request_format0a=$0a;
+  list.source_mb_option80=$80;
+  list.dest_mb_option81=$81;
+  list.end_of_options00=$00;
+  list.cmd=$00;
+  list.modulo00=$00;
+
+  list.size=length;
+  list.dest_mb=(unsigned char)(dest>>20);
+  list.dest_bank=(dest>>16)&0x7f;
+  list.dest_addr=(unsigned word)dest;
+
+  // Work around missing fragments in KickC
+  list.source_mb=(unsigned char)(src>>20);
+  list.source_bank=(src>>16)&0x7f;
+
+  list.source_addr=(unsigned word)src;
+
+  // DMA list lives in hypervisor memory, so use correct list address
+  // when triggering
+  // (Variables in KickC usually end up in ZP, so we have to provide the
+  // base page correction
+  if (!(>&list))
+    *(unsigned char *)$D701 = $BF+(>&list);
+  else
+    *(unsigned char *)$D701 = (>&list);
+  *(unsigned char *)$D702 = $7F;
+  *(unsigned char *)$D704 = $FF;
+  *(unsigned char *)$D705 = <&list;
+  
+}
+
+volatile unsigned char lpeek_value = $12;
+unsigned char lpeek(unsigned long address)
+{
+  // Work around all sorts of fun problems in KickC
+  //  dma_copy(address,$BF00+((unsigned short)<&lpeek_value),1);  
+  unsigned dword t = (unsigned dword)&lpeek_value;
+  if (>((unsigned short)&lpeek_value)) t+=$FFF0000;
+  else t += $FFFBF00;
+
+  
+  unsigned char *c = $BF00 + (unsigned char *)&t;
+  
+  dma_copy(address,t,1);
+
+  return lpeek_value;
+}
+
+volatile unsigned char *current_screen_line = SCREEN;
+volatile unsigned char current_screen_x = 0;
 
 void print_char(char c)
 {
@@ -125,131 +409,75 @@ void print_dhex(unsigned dword value)
   print_hex((unsigned word)value);
 }
 
-void describe_pdb(unsigned char pdb_number)
+unsigned char load_program(unsigned char pdb_number)
 {
+  // Search through packed programs for the one we need
+  unsigned long address=$20000;
   unsigned char i;
-  struct process_descriptor_block *p
-    =(struct process_descriptor_block *)(((unsigned short)stored_pdbs)+(((unsigned short)pdb_number)<<8));
+  unsigned char match=0;
 
-  print_to_screen("pdb#");
-  print_hex((word)pdb_number);
-  print_to_screen(":");
-  print_newline();
 
-  print_to_screen("  pid:          ");
-  print_hex((word)p->process_id);
-  print_newline();
+  struct process_descriptor_block *pdb
+    =(struct process_descriptor_block*)
+    ((unsigned short)stored_pdbs+(((unsigned short)pdb_number)<<8));
 
-  print_to_screen("  process name: ");
-  char *n=p->process_name;
-  for(i=0;n[i]&&(i<17);i++) {
-    print_char(n[i]);
+
+
+  while(lpeek(address)) {
+
+    // Check for name match
+    for(i=0;i<16;i++) {
+
+      unsigned char c1=lpeek(address+i);
+      unsigned char *n=pdb->process_name;
+      unsigned char c2=n[i];
+
+      if ((c1==0)&&(c2==0))
+	{
+	  match=1;
+	  break;
+	}
+      if (c1!=c2)
+	break;
+    }
+
+
+    if (match) {
+
+      // Found program -- now copy it into place
+      unsigned short length;
+      unsigned char *hb=((unsigned char *)&length)+1;
+      length = lpeek(address+16);
+      *hb = lpeek(address+17);
+
+      // XXX - Make sure it fits the allocated memory
+      
+      // Copy program into place.
+      // As the program is formatted as a C64 program with a 
+      // $0801 header, we copy it to offset $07FF.
+
+      unsigned dword dest=pdb->storage_start_address;
+      dest+=$07FF;
+
+      dma_copy(address+32,dest,length);
+
+      // Mark process as now runnable
+      pdb->process_state=STATE_READY;
+
+      return 0;
+    }
+
+    unsigned long new_address=(dword)lpeek(address+18);
+    new_address|=((dword)(lpeek(address+19)))<<8;
+    new_address|=((dword)(lpeek(address+20)))<<16;
+
+    address=new_address;
+
   }
-  print_newline();
 
-  print_to_screen("  mem start:    $");
-  print_dhex(p->storage_start_address);
-  print_newline();
-
-  print_to_screen("  mem end:      $");
-  print_dhex(p->storage_end_address);
-  print_newline();
-
-  print_to_screen("  pc:           $");
-  unsigned short *ss=p->stored_state;
-  print_hex(ss[4]);
-  print_newline();
-
-
+  // Failed to find program
+  return 1;
 }
-
-// Setup a new process descriptor block
-void initialise_pdb(unsigned char pdb_number,char *name)
-{
-  unsigned char i;
-
-  struct process_descriptor_block *p
-    =(struct process_descriptor_block *)(((unsigned short)stored_pdbs)+(((unsigned short)pdb_number)<<8));
-
-  // Setup process ID
-  //XXX - Call the function next_free_pid() to get a process ID for the
-  //process in this PDB, and store it in p->process_id
-  p->process_id =  next_free_pid();
-
-  // Setup process name 
-  // (32 bytes space for each to fit 16 chars + nul)
-  // (we could just use 17 bytes, but kickc can't multiply by 17)
-  p->process_name=process_names+(((short)i)<<5);
-  
-  //XXX - copy the string in the array 'name' into the array 'p->process_name'
-  //XXX - To make your life easier, do something like char *pn=p->process_name
-  //      Then you can just do something along the lines of pn[...]=name[...] 
-  //      in a loop to copy the name into place.
-  //      (The arrays are both 17 bytes long)
-  char *pn=p->process_name;
-  for (i=0;i<17;i++)  	pn[i]=name[i];
-
-  // Set process state as not running.
-  //XXX - Put the value STATE_NOTRUNNING into p->process_state
-	p->process_state	= STATE_NOTRUNNING;
-
-
-  // Set stored memory area
-  // (for now, we just use fixed 8KB steps from $30000-$3FFFF
-  // corresponding to the PDB number
-  //XXX - Set p->storage_start_address to the correct start address
-  //for a process that is in this PDB.
-  //The correct address is $30000 + (((unsigned dword)pdb_number)*$2000);
-  p->storage_start_address=$30000 + (((unsigned dword)pdb_number)*$2000);
-
-
-  //XXX - Then do the same for the end address of the process
-  //This gets stored into p->storage_end_address and the correct
-  //address is $31FFF + (((unsigned dword)pdb_number)*$2000);
-  p->storage_end_address = $31FFF + (((unsigned dword)pdb_number)*$2000);
-
-  // Initialise processor state for standard entry at $080D
-  // Everything to zero, except for a few things we will set manually
-
-  // 64 bytes context switching state for each process
-  p->stored_state=process_context_states+(((unsigned short)pdb_number)<<6);
-  unsigned char *ss=p->stored_state;
-
-  //XXX - Set all 64 bytes of the array 'ss' to zero, to clear the context
-  //switching state
-  for(i=0;i<64;i++) ss[i] = $00;
-
-  // Set tandard CPU flags (8-bit stack, interrupts disabled)
-  ss[7] = $24;
-
-  //XXX - Set the stack pointer to $01FF
-  //(This requires a bit of fiddly pointer arithmetic, so to save you 
-  //the trouble working it out, you can use the following as the left 
-  //side of the expression:   *(unsigned short *)&ss[x] = ...
-  //where x is the offset of the stack pointer low byte (SPL) in the
-  //Hypervisor saved state registers in Appendix D of the MEGA65 User's
-  //Guide. i.e., if it were at $D640, x would be replaced with 0, and
-  //if it were at $D641, x would be replaced with 1, and so on.
-  //XXX - Note that the MEGA65 User's Guide has been updated on FLO.
-  //You will required the latest version, as otherwise SPL is not listed.
-
-  int x = 5;   //unsigned word SPL = $D645; x = <(<SPL) //x = SPL & 0x000f
-  *(unsigned short *)&ss[x] = $01FF;
-
-  //XXX - Set the program counter to $080D
-  //(This requires a bit of fiddly pointer arithmetic, so to save you 
-  //the trouble working it out, you can use the following as the left 
-  //side of the expression:   *(unsigned short *)&ss[x] = ...
-  //where x is the offset of the program counter low byte (PCL) in the
-  //Hypervisor saved state registers in Appendix D of the MEGA65 User's
-  //Guide.
-  
-  x = 8;   //unsigned word PCL = $D648; x = <(<PCL) //x = PCL & 0x000f
-  *(unsigned short *)&ss[8] =  $080D;
-
-  return;
-}
-
 
 void main() {
 
@@ -278,17 +506,41 @@ void syscall2() {
  exit_hypervisor();
  }
  void syscall03() {
+ describe_pdb(running_pdb);
  exit_hypervisor();
  }
  void syscall04() {
  exit_hypervisor();
  }
- void syscall05() {
+ 
+void syscall05() {
+	yield(); 
  exit_hypervisor();
- }
- void syscall06() {
- exit_hypervisor();
- }
+}
+
+
+
+void syscall06() {
+	//Display PID of current process unsigned char pid;
+
+	struct process_descriptor_block *pdb =(struct process_descriptor_block*)
+
+	((unsigned short)stored_pdbs+(((unsigned short)running_pdb)<<8));
+
+	print_to_screen("you are pid ");
+
+	print_hex(pdb->process_id);
+
+ 	print_to_screen(" in pdb ");
+
+	print_hex(running_pdb);
+
+	print_newline();
+	
+	exit_hypervisor();
+}
+
+
  void syscall07() {
  exit_hypervisor();
  }
@@ -461,34 +713,44 @@ void syscall2() {
  exit_hypervisor();
  }
  void RESET() {
- //intialize screen memory, and select correct font
-*VIC_MEMORY = 0x14;
-//fill the screen with spaces
-memset(SCREEN, ' ', 40*25);
-//set the colour of every character on the screen the white
-memset(COLS, WHITE, 40*25);
-////print the "hello world!" message
-char* sc = SCREEN+40; //display it one line down on the screen
-// a simple copy routine to copy the string
-//call print to screen
+		//intialize screen memory, and select correct font
+		*VIC_MEMORY = 0x14;
+		//fill the screen with spaces
+		memset(SCREEN, ' ', 40*25);
+		//set the colour of every character on the screen the white
+		memset(COLS, WHITE, 40*25);
+		////print the "hello world!" message
+		char* sc = SCREEN+40; //display it one line down on the screen
+		// a simple copy routine to copy the string
+		//call print to screen
 
-current_screen_line = SCREEN;
+		current_screen_line = SCREEN;
+    print_newline();
+		print_to_screen(MESSAGE);
     print_newline();
     print_newline();
-    print_newline();
-	
-		initialise_pdb(0,"program1.prg");  
-    describe_pdb(0);
+
+
+		// Load program 2 into PDB #0 
+		initialise_pdb(0,"program2.prg"); 
+		load_program(0);
+
+		// Load program 2 into PDB #1
+		initialise_pdb(1,"program2.prg"); 
+		load_program(1);
+
+		resume_pdb(0);
+//    describe_pdb(0);
     
     
-while(true){
-if(*RASTER == 54 || *RASTER == 66) {
-*BGCOL = WHITE;
-} else {
-*BGCOL = BLUE;
-}
-}
- exit_hypervisor();
+		while(true)	{
+			if(*RASTER == 54 || *RASTER == 66) {
+				*BGCOL = WHITE;
+			} else {
+				*BGCOL = BLUE;
+			}	
+		}
+		exit_hypervisor();
  }
  void PAGFAULT() {
  exit_hypervisor();
@@ -653,22 +915,11 @@ export align(0x100) struct Syscall[] TRAPS = {
 };
 
 /*
-XXX - Add syscall handler functions here
+XXX -  Copy your syscall handler functions from os5.2.kc
+XXX - Don't forget to add describe_pdb(running_pdb); to your handler for SYSCALL $03
 
-XXX - Add your RESET() function here
+XXX - Copy your RESET() routine from os5.2.kc
+XXX - Don't forget to call resume_pdb(0) immediately after load_program(0)
 
-
-XXX - Add the following line inside your RESET() function just
-      before the "//Loop forever with 2 bars" line
-    current_screen_line = SCREEN;
-    print_newline();
-    print_newline();
-    print_newline();
-
-    initialise_pdb(0,"program1.prg");
-    describe_pdb(0);
-
-
-XXX - Add the missing system traps and entry point tables here
-XXX - (And don't forget to include the #pragma line to force them into the syscall segment)
+XXX - Copy your trap handler functions and entry point tables from os5.2.kc
 */

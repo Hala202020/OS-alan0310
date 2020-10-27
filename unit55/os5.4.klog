@@ -3,13 +3,13 @@ flex pass 1
 flex pass 2
 flex pass 3
 Output pass
-Writing prg file: os5.2.bin
-Writing prg file: /home/student/repo/unit5/os5.2.prg
+Writing prg file: os5.4.bin
+Writing prg file: /home/student/repo/unit5/os5.4.prg
 
 Memory Map
 ----------
 Default-segment:
-  $2000-$2011 Default
+  $2000-$201d Default
 
 XMega65Bin-segment:
 
@@ -17,13 +17,13 @@ Syscall-segment:
   $8000-$81bf Syscall
 
 Code-segment:
-  $8200-$8660 Code
+  $8200-$8e29 Code
 
 Data-segment:
-  $8661-$86e9 Data
+  $8e2a-$8f0f Data
 
 Stack-segment:
 
 Zeropage-segment:
 
-Writing Vice symbol file: /home/student/repo/unit5/os5.2.vs
+Writing Vice symbol file: /home/student/repo/unit5/os5.4.vs

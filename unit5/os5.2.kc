@@ -18,7 +18,7 @@ const char BLACK = 0;
 const char BLUE = 6;
 const char WHITE = 1;
 
-char[] MESSAGE = "checkpoint 5.2";
+char[] MESSAGE = "checkpoint 5.2 gard0500";
 
 const unsigned char STATE_NOTRUNNING = $00;
 const unsigned char STATE_RUNNING = $01;
@@ -461,24 +461,25 @@ void syscall2() {
  exit_hypervisor();
  }
  void RESET() {
- //intialize screen memory, and select correct font
-*VIC_MEMORY = 0x14;
-//fill the screen with spaces
-memset(SCREEN, ' ', 40*25);
-//set the colour of every character on the screen the white
-memset(COLS, WHITE, 40*25);
-////print the "hello world!" message
-char* sc = SCREEN+40; //display it one line down on the screen
-// a simple copy routine to copy the string
-//call print to screen
+	//intialize screen memory, and select correct font
+	*VIC_MEMORY = 0x14;
+	//fill the screen with spaces
+	memset(SCREEN, ' ', 40*25);
+	//set the colour of every character on the screen the white
+	memset(COLS, WHITE, 40*25);
+	////print the "hello world!" message
+	char* sc = SCREEN+40; //display it one line down on the screen
+	// a simple copy routine to copy the string
+	//call print to screen
 
-current_screen_line = SCREEN;
-    print_newline();
-    print_newline();
-    print_newline();
-	
-		initialise_pdb(0,"program1.prg");  
-    describe_pdb(0);
+	current_screen_line = SCREEN;
+	print_newline();
+	print_to_screen(MESSAGE);
+	print_newline();
+	print_newline();
+
+	initialise_pdb(0,"program1.prg");  
+	describe_pdb(0);
     
     
 while(true){

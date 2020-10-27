@@ -184,10 +184,11 @@ void initialise_pdb(unsigned char pdb_number,char *name)
   //XXX - copy the string in the array 'name' into the array 'p->process_name'
   //XXX - To make your life easier, do something like char *pn=p->process_name
   //      Then you can just do something along the lines of pn[...]=name[...] 
-  //      in a loop to copy the name into place.
+NOTRUNNING  //      in a loop to copy the name into place.
   //      (The arrays are both 17 bytes long)
   char *pn=p->process_name;
-  for (i=0;i<17;i++)  	pn[i]=name[i];
+  int j=0;
+  for (j=0;j<17;j++)  	pn[j]=name[j];
 
   // Set process state as not running.
   //XXX - Put the value STATE_NOTRUNNING into p->process_state
@@ -197,16 +198,14 @@ void initialise_pdb(unsigned char pdb_number,char *name)
   // Set stored memory area
   // (for now, we just use fixed 8KB steps from $30000-$3FFFF
   // corresponding to the PDB number
-  //XXX - Set p->storage_start_address to the correct start address
-  //for a process that is in this PDB.
-  //The correct address is $30000 + (((unsigned dword)pdb_number)*$2000);
-  p->storage_start_address=$30000 + (((unsigned dword)pdb_number)*$2000);
+  XXX - Set p->storage_start_address to the correct start address
+  for a process that is in this PDB.
+  The correct address is $30000 + (((unsigned dword)pdb_number)*$2000);
 
 
-  //XXX - Then do the same for the end address of the process
-  //This gets stored into p->storage_end_address and the correct
-  //address is $31FFF + (((unsigned dword)pdb_number)*$2000);
-  p->storage_end_address = $31FFF + (((unsigned dword)pdb_number)*$2000);
+  XXX - Then do the same for the end address of the process
+  This gets stored into p->storage_end_address and the correct
+  address is $31FFF + (((unsigned dword)pdb_number)*$2000);
 
   // Initialise processor state for standard entry at $080D
   // Everything to zero, except for a few things we will set manually
@@ -215,37 +214,32 @@ void initialise_pdb(unsigned char pdb_number,char *name)
   p->stored_state=process_context_states+(((unsigned short)pdb_number)<<6);
   unsigned char *ss=p->stored_state;
 
-  //XXX - Set all 64 bytes of the array 'ss' to zero, to clear the context
-  //switching state
-  for(i=0;i<64;i++) ss[i] = $00;
+  XXX - Set all 64 bytes of the array 'ss' to zero, to clear the context
+  switching state
+  for(i=0;i<63;i++) ss[i] = $00;
 
   // Set tandard CPU flags (8-bit stack, interrupts disabled)
   ss[7] = $24;
 
-  //XXX - Set the stack pointer to $01FF
-  //(This requires a bit of fiddly pointer arithmetic, so to save you 
-  //the trouble working it out, you can use the following as the left 
-  //side of the expression:   *(unsigned short *)&ss[x] = ...
-  //where x is the offset of the stack pointer low byte (SPL) in the
-  //Hypervisor saved state registers in Appendix D of the MEGA65 User's
-  //Guide. i.e., if it were at $D640, x would be replaced with 0, and
-  //if it were at $D641, x would be replaced with 1, and so on.
-  //XXX - Note that the MEGA65 User's Guide has been updated on FLO.
-  //You will required the latest version, as otherwise SPL is not listed.
+  XXX - Set the stack pointer to $01FF
+  (This requires a bit of fiddly pointer arithmetic, so to save you 
+  the trouble working it out, you can use the following as the left 
+  side of the expression:   *(unsigned short *)&ss[x] = ...
+  where x is the offset of the stack pointer low byte (SPL) in the
+  Hypervisor saved state registers in Appendix D of the MEGA65 User's
+  Guide. i.e., if it were at $D640, x would be replaced with 0, and
+  if it were at $D641, x would be replaced with 1, and so on.
+  XXX - Note that the MEGA65 User's Guide has been updated on FLO.
+  You will required the latest version, as otherwise SPL is not listed.
 
-  int x = 5;   //unsigned word SPL = $D645; x = <(<SPL) //x = SPL & 0x000f
-  *(unsigned short *)&ss[x] = $01FF;
+  XXX - Set the program counter to $080D
+  (This requires a bit of fiddly pointer arithmetic, so to save you 
+  the trouble working it out, you can use the following as the left 
+  side of the expression:   *(unsigned short *)&ss[x] = ...
+  where x is the offset of the program counter low byte (PCL) in the
+  Hypervisor saved state registers in Appendix D of the MEGA65 User's
+  Guide.
 
-  //XXX - Set the program counter to $080D
-  //(This requires a bit of fiddly pointer arithmetic, so to save you 
-  //the trouble working it out, you can use the following as the left 
-  //side of the expression:   *(unsigned short *)&ss[x] = ...
-  //where x is the offset of the program counter low byte (PCL) in the
-  //Hypervisor saved state registers in Appendix D of the MEGA65 User's
-  //Guide.
-  
-  x = 8;   //unsigned word PCL = $D648; x = <(<PCL) //x = PCL & 0x000f
-  *(unsigned short *)&ss[8] =  $080D;
 
   return;
 }
@@ -476,11 +470,9 @@ current_screen_line = SCREEN;
     print_newline();
     print_newline();
     print_newline();
-	
-		initialise_pdb(0,"program1.prg");  
+
     describe_pdb(0);
-    
-    
+   
 while(true){
 if(*RASTER == 54 || *RASTER == 66) {
 *BGCOL = WHITE;
@@ -652,7 +644,7 @@ export align(0x100) struct Syscall[] TRAPS = {
 
 };
 
-/*
+
 XXX - Add syscall handler functions here
 
 XXX - Add your RESET() function here
@@ -671,4 +663,3 @@ XXX - Add the following line inside your RESET() function just
 
 XXX - Add the missing system traps and entry point tables here
 XXX - (And don't forget to include the #pragma line to force them into the syscall segment)
-*/

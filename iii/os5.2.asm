@@ -114,11 +114,6 @@ RESET: {
     lda #>SCREEN
     sta.z current_screen_line+1
     jsr print_newline
-    lda #<MESSAGE
-    sta.z print_to_screen.c
-    lda #>MESSAGE
-    sta.z print_to_screen.c+1
-    jsr print_to_screen
     jsr print_newline
     jsr print_newline
     jsr initialise_pdb
@@ -876,9 +871,6 @@ syscall00: {
     jsr exit_hypervisor
     rts
 }
-.segment Data
-  MESSAGE: .text "checkpoint 5.2 gard0500"
-  .byte 0
 .segment Syscall
   // Now we can have a nice table of up to 64 SYSCALL handlers expressed
   // in a fairly readable and easy format.
