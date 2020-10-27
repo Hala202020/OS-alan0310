@@ -355,6 +355,7 @@ char* sc = SCREEN+40; //display it one line down on the screen
 
 current_screen_line = SCREEN;
     print_newline();
+    print_to_screen(MESSAGE);
     print_newline();
     print_newline();
 
