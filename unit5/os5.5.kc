@@ -7,7 +7,7 @@
 import "string"
 
 #pragma link("mega65hyper.ld")
-
+ 
 
 const char* RASTER = 0xd012;
 const char* VIC_MEMORY = 0xd018;
@@ -18,7 +18,7 @@ const char BLACK = 0;
 const char BLUE = 6;
 const char WHITE = 1;
 
-char[] MESSAGE = "checkpoint 5.4";
+char[] MESSAGE = "checkpoint 5.5";
 
 const unsigned char STATE_NOTRUNNING = $00;
 
@@ -101,7 +101,7 @@ void describe_pdb(unsigned char pdb_number)
   struct process_descriptor_block *p
     =(struct process_descriptor_block *)(((unsigned short)stored_pdbs)+(((unsigned short)pdb_number)<<8));
 
-  print_to_screen("pdb#");
+  print_to_screen("000#");
   print_hex((word)pdb_number);
   print_to_screen(":");
   print_newline();
@@ -292,41 +292,61 @@ void yield()
 		struct process_descriptor_block *pdb =(struct process_descriptor_block*)
 		((unsigned short)stored_pdbs+((unsigned short )(i)<<8));
 		if (pdb->process_state == STATE_READY &&  prev_pdb_number != i)
+		{
+			//print_to_screen("->os5.5/yield: pdb: ");
+//			describe_pdb(i);
 			resume_pdb(i);
+			
+		}
 	}
 	// 	struct process_descriptor_block *pdb =(struct process_descriptor_block*)
  	//	((unsigned short)stored_pdbs+(((unsigned short)next_pdb)<<8));
-
 }
+
+unsigned char new_pdb = 0;
 
 void exec()
 {
+
 	unsigned char i;
 	struct process_descriptor_block *pdb =(struct process_descriptor_block*)
 	((unsigned short)stored_pdbs+(((unsigned short)running_pdb)<<8));
 	
-	//for (i=0;i<17;i++)  	pn[i]=name[i];
 	//replace program name in pdb: 
 	//copy program name from transfer area $0300 to process name
-//	unsigned long dest = (unsigned long)(pdb->process_name);
-//	unsigned long src = $0300;
-//	dma_copy(src, dest, 17);
 	char *pn=pdb->process_name;
+	
 	for (i=0;i<17;i++) pn[i] = tr_area[i];
-
+	
   // load program with new name 
   load_program(running_pdb);
-
+  
+print_newline();
+print_newline();
+describe_pdb( 1);
 	resume_pdb(running_pdb);
+
 }
 
-unsigned char fork()
+
+void fork()
 {
+//print_to_screen("->os5.5/Fork");
+
+	if (new_pdb != 0) 
+	{
+		//tr_area[i] = 0;	
+		//return;
+	}
 	unsigned char i = 0;
 	unsigned char prev_running_pdb = running_pdb;
+	
 	pause_pdb(running_pdb);
 
 	struct process_descriptor_block *pdb;
+	
+	struct process_descriptor_block *p_prev =(struct process_descriptor_block*)
+	((unsigned short)stored_pdbs+(((unsigned short)prev_running_pdb)<<8));
 	
 	for(i=0;i<8;i++) {
 		pdb =(struct process_descriptor_block*)
@@ -334,38 +354,54 @@ unsigned char fork()
 		//for (i=0;i<17;i++) tr_area[i]=program_name[i];
 		
 		if (pdb->process_id == 0) {
+				new_pdb = i;
 				initialise_pdb(i,tr_area);
 			
-				for (i=0;i<17;i++) tr_area[i]=$00;
-	
-				struct process_descriptor_block *p_prev =(struct process_descriptor_block*)
-				((unsigned short)stored_pdbs+(((unsigned short)prev_running_pdb)<<8));
-				
-				unsigned long s = p_prev->storage_start_address;
-				pdb->storage_start_address = s;
-				
-				s = p_prev->storage_end_address;
-				pdb->storage_end_address = s;
+				//for (i=0;i<17;i++) tr_area[i]=$00;
+				tr_area[i] = 0;
+			
+				unsigned long dest_end = pdb->storage_end_address;
+				unsigned long src = p_prev->storage_start_address;
+				unsigned long dest = pdb->storage_start_address;
+				unsigned short len = (unsigned short)dest_end - (unsigned short)dest;
+				dma_copy(src,dest,len);
 				
 				unsigned char * ps = p_prev->stored_state;
-				pdb->stored_state = ps;
+				unsigned char * pdbs = pdb->stored_state;
+				for(i=0;i<64;i++) pdbs[i] = ps[i];
+
+//				unsigned char * ps = p_prev->stored_state;
+//				pdb->stored_state = ps;
 				
 				
-			 	tr_area[i]=pdb->process_id;
+			 	tr_area[0]=pdb->process_id;
 			 	/* (g) */ 	
 			  unsigned short *ss = pdb->stored_state;
-			 	//unsigned word PCL = $D648; x = <(<PCL) //x = PCL & 0x000f
-				*(unsigned short *)&ss[8] =  $080D;
+				*(unsigned short *)&ss[5] = $01FF;
+				*(unsigned short *)&ss[4] =  $080D;
 				
 				/* (h) */
-				p_prev->process_state = STATE_READY;
+				pdb->process_state = STATE_READY;
+				
+				
+				//char *pn= pdb->process_name;
+				//char[] nme = "program.prg";
+				//for (i=0;i<17;i++)  	pn[i]=nme[i];
+				
+  			pdb->process_state=STATE_RUNNING;
 			
+//				print_to_screen(": found pid 0");
 			break;
 		}
 		
 	}
 
-	return pdb->process_id;
+//	print_to_screen(": $0300:");
+//	print_hex((word)tr_area[0]);
+//	print_newline();
+//  describe_pdb(running_pdb);
+//	describe_pdb(new_pdb);
+//	return pdb->process_id;
 }
 
 struct dma_list {
@@ -577,6 +613,8 @@ void syscall2() {
  void syscall02() {
  exit_hypervisor();
  }
+ 
+  /* process_info from osabi.kc */
  void syscall03() {
  describe_pdb(running_pdb);
  exit_hypervisor();
@@ -585,13 +623,14 @@ void syscall2() {
  exit_hypervisor();
  }
  
+  /* yield from osabi.kc */
 void syscall05() {
 	yield(); 
  exit_hypervisor();
 }
 
 
-
+ /* showid from osabi.kc */
 void syscall06() {
 	//Display PID of current process unsigned char pid;
 
@@ -612,18 +651,20 @@ void syscall06() {
 	exit_hypervisor();
 }
 
-
+ /* fork from osabi.kc */
  void syscall07() {
  	/* set $0300 to the process ID Of newly created process */
- 	tr_area[0] = fork();
-
- 	
+ 	fork();
  	exit_hypervisor();
  }
+ 
+ /* exec from osabi.kc */
  void syscall08() {	 
 	exec();
 	 exit_hypervisor();
  }
+ 
+ 
  void syscall09() {
  exit_hypervisor();
  }
@@ -810,7 +851,7 @@ void syscall06() {
 		initialise_pdb(0,"program3.prg"); 
 		load_program(0);
 		resume_pdb(0);
-//    describe_pdb(0);
+    //describe_pdb(0);
     
     
 		while(true)	{

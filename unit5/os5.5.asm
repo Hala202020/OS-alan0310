@@ -40,12 +40,12 @@
   // To save writing 0x4C and 0xEA all the time, we define them as constants
   .const JMP = $4c
   .const NOP = $ea
-  .label running_pdb = $44
-  .label next_pdb = $45
-  .label pid_counter = $23
-  .label lpeek_value = $46
+  .label running_pdb = $43
+  .label next_pdb = $44
+  .label pid_counter = $29
+  .label lpeek_value = $45
   .label current_screen_line = $19
-  .label current_screen_x = $29
+  .label current_screen_x = $21
   // Which is the current running process?
   lda #$ff
   sta.z running_pdb
@@ -173,17 +173,17 @@ RESET: {
 .segment Code
 // resume_pdb(byte zeropage(2) pdb_number)
 resume_pdb: {
-    .label __1 = $47
-    .label __2 = $47
-    .label __6 = $4d
-    .label p = $47
-    .label src = $49
-    .label src_1 = $4d
-    .label ss = $51
+    .label __1 = $46
+    .label __2 = $46
+    .label __6 = $4c
+    .label p = $46
+    .label src = $48
+    .label src_1 = $4c
+    .label ss = $50
     .label i = 3
     .label pdb_number = 2
-    .label __16 = $53
-    .label __17 = $55
+    .label __16 = $52
+    .label __17 = $54
     lda.z pdb_number
     sta.z __1
     lda #0
@@ -334,28 +334,28 @@ resume_pdb: {
 }
 // dma_copy(dword zeropage($b) src, dword zeropage(7) dest, word zeropage(5) length)
 dma_copy: {
-    .label __0 = $57
-    .label __2 = $5b
-    .label __4 = $5f
-    .label __5 = $61
-    .label __7 = $65
-    .label __9 = $69
+    .label __0 = $56
+    .label __2 = $5a
+    .label __4 = $5e
+    .label __5 = $60
+    .label __7 = $64
+    .label __9 = $68
     .label src = $b
     .label dest = 7
-    .label list_request_format0a = $2e
-    .label list_source_mb_option80 = $2f
-    .label list_source_mb = $30
-    .label list_dest_mb_option81 = $31
-    .label list_dest_mb = $32
-    .label list_end_of_options00 = $33
-    .label list_cmd = $34
-    .label list_size = $35
-    .label list_source_addr = $37
-    .label list_source_bank = $39
-    .label list_dest_addr = $3a
-    .label list_dest_bank = $3c
-    .label list_modulo00 = $3d
     .label length = 5
+    .label list_request_format0a = $2d
+    .label list_source_mb_option80 = $2e
+    .label list_source_mb = $2f
+    .label list_dest_mb_option81 = $30
+    .label list_dest_mb = $31
+    .label list_end_of_options00 = $32
+    .label list_cmd = $33
+    .label list_size = $34
+    .label list_source_addr = $36
+    .label list_source_bank = $38
+    .label list_dest_addr = $39
+    .label list_dest_bank = $3b
+    .label list_modulo00 = $3c
     lda #0
     sta.z list_request_format0a
     sta.z list_source_mb_option80
@@ -490,19 +490,19 @@ dma_copy: {
 }
 // load_program(byte register(A) pdb_number)
 load_program: {
-    .label __1 = $6b
-    .label __2 = $6b
-    .label __30 = $75
-    .label __31 = $75
+    .label __1 = $6a
+    .label __2 = $6a
+    .label __30 = $74
+    .label __31 = $74
     .label __34 = $f
     .label __35 = $f
-    .label pdb = $6b
-    .label n = $79
+    .label pdb = $6a
+    .label n = $78
     .label i = $14
-    .label new_address = $71
+    .label new_address = $70
     .label address = $f
-    .label length = $42
-    .label dest = $6d
+    .label length = $41
+    .label dest = $6c
     .label match = $13
     sta.z __1
     lda #0
@@ -796,10 +796,10 @@ load_program: {
     inc.z i
     jmp __b2
 }
-// lpeek(dword zeropage($6d) address)
+// lpeek(dword zeropage($6c) address)
 lpeek: {
-    .label t = $3e
-    .label address = $6d
+    .label t = $3d
+    .label address = $6c
     // Work around all sorts of fun problems in KickC
     //  dma_copy(address,$BF00+((unsigned short)<&lpeek_value),1);  
     lda #<lpeek_value
@@ -871,21 +871,21 @@ lpeek: {
 initialise_pdb: {
     //XXX - Set the stack pointer to $01FF
     .const x = 5
-    .label __1 = $7b
-    .label __2 = $7b
-    .label __9 = $7f
-    .label __10 = $7f
-    .label __11 = $7f
-    .label __12 = $83
-    .label __13 = $83
-    .label __14 = $83
-    .label __15 = $89
-    .label __16 = $89
-    .label __17 = $89
-    .label __19 = $87
-    .label p = $7b
-    .label pn = $7d
-    .label ss = $7b
+    .label __1 = $7a
+    .label __2 = $7a
+    .label __9 = $7e
+    .label __10 = $7e
+    .label __11 = $7e
+    .label __12 = $82
+    .label __13 = $82
+    .label __14 = $82
+    .label __15 = $88
+    .label __16 = $88
+    .label __17 = $88
+    .label __19 = $86
+    .label p = $7a
+    .label pn = $7c
+    .label ss = $7a
     .label pdb_number = $15
     .label name = $16
     lda.z pdb_number
@@ -1103,10 +1103,10 @@ initialise_pdb: {
     jmp __b1
 }
 next_free_pid: {
-    .label __2 = $89
+    .label __2 = $88
     .label pid = $18
-    .label p = $89
-    .label i = $7d
+    .label p = $88
+    .label i = $7c
     inc.z pid_counter
     // Start with the next process ID
     lda.z pid_counter
@@ -1446,16 +1446,17 @@ syscall09: {
     jsr exit_hypervisor
     rts
 }
+/* exec from osabi.kc */
 syscall08: {
     jsr exec
     jsr exit_hypervisor
     rts
 }
 exec: {
-    .label __1 = $8b
-    .label __2 = $8b
-    .label pdb = $8b
-    .label pn = $8b
+    .label __1 = $8a
+    .label __2 = $8a
+    .label pdb = $8a
+    .label pn = $8a
     lda.z running_pdb
     sta.z __1
     lda #0
@@ -1471,12 +1472,8 @@ exec: {
     lda.z pdb+1
     adc #>stored_pdbs
     sta.z pdb+1
-    //for (i=0;i<17;i++)  	pn[i]=name[i];
     //replace program name in pdb: 
     //copy program name from transfer area $0300 to process name
-    //	unsigned long dest = (unsigned long)(pdb->process_name);
-    //	unsigned long src = $0300;
-    //	dma_copy(src, dest, 17);
     ldy #OFFSET_STRUCT_PROCESS_DESCRIPTOR_BLOCK_PROCESS_NAME
     lda (pn),y
     pha
@@ -1491,6 +1488,10 @@ exec: {
     bcc __b2
     lda.z running_pdb
     jsr load_program
+    jsr print_newline
+    jsr print_newline
+    ldx #1
+    jsr describe_pdb
     lda.z running_pdb
     sta.z resume_pdb.pdb_number
     jsr resume_pdb
@@ -1501,536 +1502,13 @@ exec: {
     iny
     jmp __b1
 }
-syscall07: {
-    jsr fork
-    /* set $0300 to the process ID Of newly created process */
-    sta tr_area
-    jsr exit_hypervisor
-    rts
-}
-fork: {
-    .label __3 = $21
-    .label __4 = $21
-    .label __12 = $8e
-    .label __13 = $8e
-    .label prev_running_pdb = $8d
-    .label pdb = $21
-    .label p_prev = $8e
-    .label s = $90
-    .label s_1 = $94
-    .label ps = $98
-    .label ss = $9a
-    lda.z running_pdb
-    sta.z prev_running_pdb
-    lda.z running_pdb
-    jsr pause_pdb
-    lda #<0
-    sta.z pdb
-    sta.z pdb+1
-    tax
-  __b1:
-    cpx #8
-    bcc __b2
-  __b7:
-    ldy #0
-    lda (pdb),y
-    rts
-  __b2:
-    txa
-    sta.z __3
-    lda #0
-    sta.z __3+1
-    lda.z __4
-    sta.z __4+1
-    lda #0
-    sta.z __4
-    clc
-    lda.z pdb
-    adc #<stored_pdbs
-    sta.z pdb
-    lda.z pdb+1
-    adc #>stored_pdbs
-    sta.z pdb+1
-    ldy #0
-    lda (pdb),y
-    cmp #0
-    beq !__b3+
-    jmp __b3
-  !__b3:
-    stx.z initialise_pdb.pdb_number
-    lda #<tr_area
-    sta.z initialise_pdb.name
-    lda #>tr_area
-    sta.z initialise_pdb.name+1
-    jsr initialise_pdb
-    ldx #0
-  __b4:
-    cpx #$11
-    bcs !__b5+
-    jmp __b5
-  !__b5:
-    lda.z prev_running_pdb
-    sta.z __12
-    lda #0
-    sta.z __12+1
-    lda.z __13
-    sta.z __13+1
-    lda #0
-    sta.z __13
-    clc
-    lda.z p_prev
-    adc #<stored_pdbs
-    sta.z p_prev
-    lda.z p_prev+1
-    adc #>stored_pdbs
-    sta.z p_prev+1
-    ldy #OFFSET_STRUCT_PROCESS_DESCRIPTOR_BLOCK_STORAGE_START_ADDRESS
-    lda (p_prev),y
-    sta.z s
-    iny
-    lda (p_prev),y
-    sta.z s+1
-    iny
-    lda (p_prev),y
-    sta.z s+2
-    iny
-    lda (p_prev),y
-    sta.z s+3
-    lda.z s
-    ldy #OFFSET_STRUCT_PROCESS_DESCRIPTOR_BLOCK_STORAGE_START_ADDRESS
-    sta (pdb),y
-    iny
-    lda.z s+1
-    sta (pdb),y
-    iny
-    lda.z s+2
-    sta (pdb),y
-    iny
-    lda.z s+3
-    sta (pdb),y
-    ldy #OFFSET_STRUCT_PROCESS_DESCRIPTOR_BLOCK_STORAGE_END_ADDRESS
-    lda (p_prev),y
-    sta.z s_1
-    iny
-    lda (p_prev),y
-    sta.z s_1+1
-    iny
-    lda (p_prev),y
-    sta.z s_1+2
-    iny
-    lda (p_prev),y
-    sta.z s_1+3
-    lda.z s_1
-    ldy #OFFSET_STRUCT_PROCESS_DESCRIPTOR_BLOCK_STORAGE_END_ADDRESS
-    sta (pdb),y
-    iny
-    lda.z s_1+1
-    sta (pdb),y
-    iny
-    lda.z s_1+2
-    sta (pdb),y
-    iny
-    lda.z s_1+3
-    sta (pdb),y
-    ldy #OFFSET_STRUCT_PROCESS_DESCRIPTOR_BLOCK_STORED_STATE
-    lda (p_prev),y
-    sta.z ps
-    iny
-    lda (p_prev),y
-    sta.z ps+1
-    ldy #OFFSET_STRUCT_PROCESS_DESCRIPTOR_BLOCK_STORED_STATE
-    lda.z ps
-    sta (pdb),y
-    iny
-    lda.z ps+1
-    sta (pdb),y
-    ldy #0
-    lda (pdb),y
-    sta tr_area,x
-    /* (g) */
-    ldy #OFFSET_STRUCT_PROCESS_DESCRIPTOR_BLOCK_STORED_STATE
-    lda (pdb),y
-    sta.z ss
-    iny
-    lda (pdb),y
-    sta.z ss+1
-    //unsigned word PCL = $D648; x = <(<PCL) //x = PCL & 0x000f
-    ldy #8*SIZEOF_WORD
-    lda #<$80d
-    sta (ss),y
-    iny
-    lda #>$80d
-    sta (ss),y
-    /* (h) */
-    lda #STATE_READY
-    ldy #OFFSET_STRUCT_PROCESS_DESCRIPTOR_BLOCK_PROCESS_STATE
-    sta (p_prev),y
-    jmp __b7
-  __b5:
-    lda #0
-    sta tr_area,x
-    inx
-    jmp __b4
-  __b3:
-    inx
-    jmp __b1
-}
-// pause_pdb(byte register(A) pdb_number)
-pause_pdb: {
-    .label __1 = $9c
-    .label __2 = $9c
-    .label __6 = $a2
-    .label p = $9c
-    .label dest = $9e
-    .label dest_1 = $a2
-    .label ss = $a6
-    .label i = $24
-    .label __15 = $a8
-    .label __16 = $aa
-    sta.z __1
-    lda #0
-    sta.z __1+1
-    lda.z __2
-    sta.z __2+1
-    lda #0
-    sta.z __2
-    clc
-    lda.z p
-    adc #<stored_pdbs
-    sta.z p
-    lda.z p+1
-    adc #>stored_pdbs
-    sta.z p+1
-    ldy #OFFSET_STRUCT_PROCESS_DESCRIPTOR_BLOCK_STORAGE_START_ADDRESS
-    lda (p),y
-    sta.z dest
-    iny
-    lda (p),y
-    sta.z dest+1
-    iny
-    lda (p),y
-    sta.z dest+2
-    iny
-    lda (p),y
-    sta.z dest+3
-    lda.z dest
-    sta.z dma_copy.dest
-    lda.z dest+1
-    sta.z dma_copy.dest+1
-    lda.z dest+2
-    sta.z dma_copy.dest+2
-    lda.z dest+3
-    sta.z dma_copy.dest+3
-    lda #0
-    sta.z dma_copy.src
-    sta.z dma_copy.src+1
-    sta.z dma_copy.src+2
-    sta.z dma_copy.src+3
-    lda #<$400
-    sta.z dma_copy.length
-    lda #>$400
-    sta.z dma_copy.length+1
-    jsr dma_copy
-    ldy #OFFSET_STRUCT_PROCESS_DESCRIPTOR_BLOCK_STORAGE_START_ADDRESS
-    lda (p),y
-    sta.z __6
-    iny
-    lda (p),y
-    sta.z __6+1
-    iny
-    lda (p),y
-    sta.z __6+2
-    iny
-    lda (p),y
-    sta.z __6+3
-    lda.z dest_1
-    clc
-    adc #<$800
-    sta.z dest_1
-    lda.z dest_1+1
-    adc #>$800
-    sta.z dest_1+1
-    lda.z dest_1+2
-    adc #0
-    sta.z dest_1+2
-    lda.z dest_1+3
-    adc #0
-    sta.z dest_1+3
-    lda.z dest_1
-    sta.z dma_copy.dest
-    lda.z dest_1+1
-    sta.z dma_copy.dest+1
-    lda.z dest_1+2
-    sta.z dma_copy.dest+2
-    lda.z dest_1+3
-    sta.z dma_copy.dest+3
-    lda #<$800
-    sta.z dma_copy.src
-    lda #>$800
-    sta.z dma_copy.src+1
-    lda #<$800>>$10
-    sta.z dma_copy.src+2
-    lda #>$800>>$10
-    sta.z dma_copy.src+3
-    lda #<$1800
-    sta.z dma_copy.length
-    lda #>$1800
-    sta.z dma_copy.length+1
-    jsr dma_copy
-    // Load stored CPU state into Hypervisor saved register area at $FFD3640
-    ldy #OFFSET_STRUCT_PROCESS_DESCRIPTOR_BLOCK_STORED_STATE
-    lda (p),y
-    sta.z ss
-    iny
-    lda (p),y
-    sta.z ss+1
-    lda #<0
-    sta.z i
-    sta.z i+1
-  //XXX - Use a for() loop to copy 63 bytes from ((unsigned char *)$D640)[0] to ss[0]--ss[62]
-  //      -- ((unsigned char *)$D640)[62] (dma_copy doesn't work for this for some slightly
-  //      complex reasons.)     
-  __b1:
-    lda.z i+1
-    cmp #>$3f
-    bcc __b2
-    bne !+
-    lda.z i
-    cmp #<$3f
-    bcc __b2
-  !:
-    // Set state of process to running
-    //XXX - Set p->process_state to STATE_READY
-    lda #STATE_READY
-    ldy #OFFSET_STRUCT_PROCESS_DESCRIPTOR_BLOCK_PROCESS_STATE
-    sta (p),y
-    // Mark this PDB as the running process
-    //XXX - Erase running pdb value
-    lda #0
-    sta.z running_pdb
-    rts
-  __b2:
-    lda #<$d640
-    clc
-    adc.z i
-    sta.z __15
-    lda #>$d640
-    adc.z i+1
-    sta.z __15+1
-    lda.z ss
-    clc
-    adc.z i
-    sta.z __16
-    lda.z ss+1
-    adc.z i+1
-    sta.z __16+1
-    ldy #0
-    lda (__15),y
-    sta (__16),y
-    inc.z i
-    bne !+
-    inc.z i+1
-  !:
-    jmp __b1
-}
-syscall06: {
-    .label __1 = $ac
-    .label __2 = $ac
-    .label pdb = $ac
-    lda.z running_pdb
-    sta.z __1
-    lda #0
-    sta.z __1+1
-    lda.z __2
-    sta.z __2+1
-    lda #0
-    sta.z __2
-    clc
-    lda.z pdb
-    adc #<stored_pdbs
-    sta.z pdb
-    lda.z pdb+1
-    adc #>stored_pdbs
-    sta.z pdb+1
-    lda #<message
-    sta.z print_to_screen.c
-    lda #>message
-    sta.z print_to_screen.c+1
-    jsr print_to_screen
-    ldy #0
-    lda (pdb),y
-    sta.z print_hex.value
-    tya
-    sta.z print_hex.value+1
-    jsr print_hex
-    lda #<message1
-    sta.z print_to_screen.c
-    lda #>message1
-    sta.z print_to_screen.c+1
-    jsr print_to_screen
-    lda.z running_pdb
-    sta.z print_hex.value
-    lda #0
-    sta.z print_hex.value+1
-    jsr print_hex
-    jsr print_newline
-    jsr exit_hypervisor
-    rts
-  .segment Data
-    message: .text "you are pid "
-    .byte 0
-    message1: .text " in pdb "
-    .byte 0
-}
-.segment Code
-// print_hex(word zeropage($26) value)
-print_hex: {
-    .label __3 = $ae
-    .label __6 = $b0
-    .label value = $26
-    ldx #0
-  __b1:
-    cpx #8
-    bcc __b2
-    lda #0
-    sta hex+4
-    lda #<hex
-    sta.z print_to_screen.c
-    lda #>hex
-    sta.z print_to_screen.c+1
-    jsr print_to_screen
-    rts
-  __b2:
-    lda.z value+1
-    cmp #>$a000
-    bcc __b4
-    bne !+
-    lda.z value
-    cmp #<$a000
-    bcc __b4
-  !:
-    ldy #$c
-    lda.z value
-    sta.z __3
-    lda.z value+1
-    sta.z __3+1
-    cpy #0
-    beq !e+
-  !:
-    lsr.z __3+1
-    ror.z __3
-    dey
-    bne !-
-  !e:
-    lda.z __3
-    sec
-    sbc #9
-    sta hex,x
-  __b5:
-    asl.z value
-    rol.z value+1
-    asl.z value
-    rol.z value+1
-    asl.z value
-    rol.z value+1
-    asl.z value
-    rol.z value+1
-    inx
-    jmp __b1
-  __b4:
-    ldy #$c
-    lda.z value
-    sta.z __6
-    lda.z value+1
-    sta.z __6+1
-    cpy #0
-    beq !e+
-  !:
-    lsr.z __6+1
-    ror.z __6
-    dey
-    bne !-
-  !e:
-    lda.z __6
-    clc
-    adc #'0'
-    sta hex,x
-    jmp __b5
-  .segment Data
-    hex: .fill 5, 0
-}
-.segment Code
-syscall05: {
-    jsr yield
-    jsr exit_hypervisor
-    rts
-}
-yield: {
-    .label __3 = $b3
-    .label __4 = $b3
-    .label prev_pdb_number = $b2
-    .label pdb = $b3
-    .label i = $28
-    lda.z running_pdb
-    sta.z prev_pdb_number
-    lda.z running_pdb
-    jsr pause_pdb
-    lda #0
-    sta.z i
-  __b1:
-    lda.z i
-    cmp #8
-    bcc __b2
-    rts
-  __b2:
-    lda.z i
-    sta.z __3
-    lda #0
-    sta.z __3+1
-    lda.z __4
-    sta.z __4+1
-    lda #0
-    sta.z __4
-    clc
-    lda.z pdb
-    adc #<stored_pdbs
-    sta.z pdb
-    lda.z pdb+1
-    adc #>stored_pdbs
-    sta.z pdb+1
-    ldy #OFFSET_STRUCT_PROCESS_DESCRIPTOR_BLOCK_PROCESS_STATE
-    lda (pdb),y
-    cmp #STATE_READY
-    bne __b3
-    lda.z prev_pdb_number
-    cmp.z i
-    bne __b4
-    jmp __b3
-  __b4:
-    lda.z i
-    sta.z resume_pdb.pdb_number
-    jsr resume_pdb
-  __b3:
-    inc.z i
-    jmp __b1
-}
-syscall04: {
-    jsr exit_hypervisor
-    rts
-}
-syscall03: {
-    ldx.z running_pdb
-    jsr describe_pdb
-    jsr exit_hypervisor
-    rts
-}
 // describe_pdb(byte register(X) pdb_number)
 describe_pdb: {
-    .label __1 = $b5
-    .label __2 = $b5
-    .label p = $b5
-    .label n = $b7
-    .label ss = $b5
+    .label __1 = $8c
+    .label __2 = $8c
+    .label p = $8c
+    .label n = $8e
+    .label ss = $8c
     txa
     sta.z __1
     lda #0
@@ -2260,7 +1738,7 @@ describe_pdb: {
     jsr print_to_screen
     jmp __b15
   .segment Data
-    message: .text "pdb#"
+    message: .text "000#"
     .byte 0
     message1: .text ":"
     .byte 0
@@ -2299,10 +1777,87 @@ print_char: {
     inc.z current_screen_x
     rts
 }
-// print_dhex(dword zeropage($2a) value)
+// print_hex(word zeropage($22) value)
+print_hex: {
+    .label __3 = $90
+    .label __6 = $92
+    .label value = $22
+    ldx #0
+  __b1:
+    cpx #8
+    bcc __b2
+    lda #0
+    sta hex+4
+    lda #<hex
+    sta.z print_to_screen.c
+    lda #>hex
+    sta.z print_to_screen.c+1
+    jsr print_to_screen
+    rts
+  __b2:
+    lda.z value+1
+    cmp #>$a000
+    bcc __b4
+    bne !+
+    lda.z value
+    cmp #<$a000
+    bcc __b4
+  !:
+    ldy #$c
+    lda.z value
+    sta.z __3
+    lda.z value+1
+    sta.z __3+1
+    cpy #0
+    beq !e+
+  !:
+    lsr.z __3+1
+    ror.z __3
+    dey
+    bne !-
+  !e:
+    lda.z __3
+    sec
+    sbc #9
+    sta hex,x
+  __b5:
+    asl.z value
+    rol.z value+1
+    asl.z value
+    rol.z value+1
+    asl.z value
+    rol.z value+1
+    asl.z value
+    rol.z value+1
+    inx
+    jmp __b1
+  __b4:
+    ldy #$c
+    lda.z value
+    sta.z __6
+    lda.z value+1
+    sta.z __6+1
+    cpy #0
+    beq !e+
+  !:
+    lsr.z __6+1
+    ror.z __6
+    dey
+    bne !-
+  !e:
+    lda.z __6
+    clc
+    adc #'0'
+    sta hex,x
+    jmp __b5
+  .segment Data
+    hex: .fill 5, 0
+}
+.segment Code
+// print_dhex(dword zeropage($24) value)
 print_dhex: {
-    .label __0 = $b9
-    .label value = $2a
+    .label __0 = $94
+    .label value = $24
     lda #0
     sta.z __0+2
     sta.z __0+3
@@ -2321,6 +1876,500 @@ print_dhex: {
     jsr print_hex
     rts
 }
+/* fork from osabi.kc */
+syscall07: {
+    jsr fork
+    jsr exit_hypervisor
+    rts
+}
+fork: {
+    .label __4 = $99
+    .label __5 = $99
+    .label __10 = $9b
+    .label __11 = $9b
+    .label __17 = $a9
+    .label __18 = $ab
+    .label prev_running_pdb = $98
+    .label p_prev = $99
+    .label pdb = $9b
+    .label i = $28
+    .label dest_end = $9d
+    .label src = $a1
+    .label dest = $a5
+    .label len = $a9
+    .label ps = $99
+    .label pdbs = $ad
+    .label ss = $af
+    lda.z running_pdb
+    sta.z prev_running_pdb
+    lda.z running_pdb
+    jsr pause_pdb
+    lda.z prev_running_pdb
+    sta.z __4
+    lda #0
+    sta.z __4+1
+    lda.z __5
+    sta.z __5+1
+    lda #0
+    sta.z __5
+    clc
+    lda.z p_prev
+    adc #<stored_pdbs
+    sta.z p_prev
+    lda.z p_prev+1
+    adc #>stored_pdbs
+    sta.z p_prev+1
+    lda #0
+    sta.z i
+  __b2:
+    lda.z i
+    cmp #8
+    bcc __b3
+    rts
+  __b3:
+    lda.z i
+    sta.z __10
+    lda #0
+    sta.z __10+1
+    lda.z __11
+    sta.z __11+1
+    lda #0
+    sta.z __11
+    clc
+    lda.z pdb
+    adc #<stored_pdbs
+    sta.z pdb
+    lda.z pdb+1
+    adc #>stored_pdbs
+    sta.z pdb+1
+    ldy #0
+    lda (pdb),y
+    cmp #0
+    beq !__b4+
+    jmp __b4
+  !__b4:
+    lda.z i
+    sta.z initialise_pdb.pdb_number
+    lda #<tr_area
+    sta.z initialise_pdb.name
+    lda #>tr_area
+    sta.z initialise_pdb.name+1
+    jsr initialise_pdb
+    //for (i=0;i<17;i++) tr_area[i]=$00;
+    lda #0
+    ldy.z i
+    sta tr_area,y
+    ldy #OFFSET_STRUCT_PROCESS_DESCRIPTOR_BLOCK_STORAGE_END_ADDRESS
+    lda (pdb),y
+    sta.z dest_end
+    iny
+    lda (pdb),y
+    sta.z dest_end+1
+    iny
+    lda (pdb),y
+    sta.z dest_end+2
+    iny
+    lda (pdb),y
+    sta.z dest_end+3
+    ldy #OFFSET_STRUCT_PROCESS_DESCRIPTOR_BLOCK_STORAGE_START_ADDRESS
+    lda (p_prev),y
+    sta.z src
+    iny
+    lda (p_prev),y
+    sta.z src+1
+    iny
+    lda (p_prev),y
+    sta.z src+2
+    iny
+    lda (p_prev),y
+    sta.z src+3
+    ldy #OFFSET_STRUCT_PROCESS_DESCRIPTOR_BLOCK_STORAGE_START_ADDRESS
+    lda (pdb),y
+    sta.z dest
+    iny
+    lda (pdb),y
+    sta.z dest+1
+    iny
+    lda (pdb),y
+    sta.z dest+2
+    iny
+    lda (pdb),y
+    sta.z dest+3
+    lda.z dest_end
+    sta.z __17
+    lda.z dest_end+1
+    sta.z __17+1
+    lda.z dest
+    sta.z __18
+    lda.z dest+1
+    sta.z __18+1
+    lda.z len
+    sec
+    sbc.z __18
+    sta.z len
+    lda.z len+1
+    sbc.z __18+1
+    sta.z len+1
+    lda.z src
+    sta.z dma_copy.src
+    lda.z src+1
+    sta.z dma_copy.src+1
+    lda.z src+2
+    sta.z dma_copy.src+2
+    lda.z src+3
+    sta.z dma_copy.src+3
+    lda.z dest
+    sta.z dma_copy.dest
+    lda.z dest+1
+    sta.z dma_copy.dest+1
+    lda.z dest+2
+    sta.z dma_copy.dest+2
+    lda.z dest+3
+    sta.z dma_copy.dest+3
+    lda.z len
+    sta.z dma_copy.length
+    lda.z len+1
+    sta.z dma_copy.length+1
+    jsr dma_copy
+    ldy #OFFSET_STRUCT_PROCESS_DESCRIPTOR_BLOCK_STORED_STATE
+    lda (ps),y
+    pha
+    iny
+    lda (ps),y
+    sta.z ps+1
+    pla
+    sta.z ps
+    ldy #OFFSET_STRUCT_PROCESS_DESCRIPTOR_BLOCK_STORED_STATE
+    lda (pdb),y
+    sta.z pdbs
+    iny
+    lda (pdb),y
+    sta.z pdbs+1
+    ldx #0
+  __b5:
+    cpx #$40
+    bcc __b6
+    //				unsigned char * ps = p_prev->stored_state;
+    //				pdb->stored_state = ps;
+    ldy #0
+    lda (pdb),y
+    sta tr_area
+    /* (g) */
+    ldy #OFFSET_STRUCT_PROCESS_DESCRIPTOR_BLOCK_STORED_STATE
+    lda (pdb),y
+    sta.z ss
+    iny
+    lda (pdb),y
+    sta.z ss+1
+    ldy #5*SIZEOF_WORD
+    lda #<$1ff
+    sta (ss),y
+    iny
+    lda #>$1ff
+    sta (ss),y
+    ldy #4*SIZEOF_WORD
+    lda #<$80d
+    sta (ss),y
+    iny
+    lda #>$80d
+    sta (ss),y
+    /* (h) */
+    lda #STATE_READY
+    ldy #OFFSET_STRUCT_PROCESS_DESCRIPTOR_BLOCK_PROCESS_STATE
+    sta (pdb),y
+    //char *pn= pdb->process_name;
+    //char[] nme = "program.prg";
+    //for (i=0;i<17;i++)  	pn[i]=nme[i];
+    lda #STATE_RUNNING
+    sta (pdb),y
+    rts
+  __b6:
+    stx.z $ff
+    txa
+    tay
+    lda (ps),y
+    sta (pdbs),y
+    inx
+    jmp __b5
+  __b4:
+    inc.z i
+    jmp __b2
+}
+// pause_pdb(byte register(A) pdb_number)
+pause_pdb: {
+    .label __1 = $b1
+    .label __2 = $b1
+    .label __6 = $b7
+    .label p = $b1
+    .label dest = $b3
+    .label dest_1 = $b7
+    .label ss = $bb
+    .label i = $2a
+    .label __15 = $bd
+    .label __16 = $bf
+    sta.z __1
+    lda #0
+    sta.z __1+1
+    lda.z __2
+    sta.z __2+1
+    lda #0
+    sta.z __2
+    clc
+    lda.z p
+    adc #<stored_pdbs
+    sta.z p
+    lda.z p+1
+    adc #>stored_pdbs
+    sta.z p+1
+    ldy #OFFSET_STRUCT_PROCESS_DESCRIPTOR_BLOCK_STORAGE_START_ADDRESS
+    lda (p),y
+    sta.z dest
+    iny
+    lda (p),y
+    sta.z dest+1
+    iny
+    lda (p),y
+    sta.z dest+2
+    iny
+    lda (p),y
+    sta.z dest+3
+    lda.z dest
+    sta.z dma_copy.dest
+    lda.z dest+1
+    sta.z dma_copy.dest+1
+    lda.z dest+2
+    sta.z dma_copy.dest+2
+    lda.z dest+3
+    sta.z dma_copy.dest+3
+    lda #0
+    sta.z dma_copy.src
+    sta.z dma_copy.src+1
+    sta.z dma_copy.src+2
+    sta.z dma_copy.src+3
+    lda #<$400
+    sta.z dma_copy.length
+    lda #>$400
+    sta.z dma_copy.length+1
+    jsr dma_copy
+    ldy #OFFSET_STRUCT_PROCESS_DESCRIPTOR_BLOCK_STORAGE_START_ADDRESS
+    lda (p),y
+    sta.z __6
+    iny
+    lda (p),y
+    sta.z __6+1
+    iny
+    lda (p),y
+    sta.z __6+2
+    iny
+    lda (p),y
+    sta.z __6+3
+    lda.z dest_1
+    clc
+    adc #<$800
+    sta.z dest_1
+    lda.z dest_1+1
+    adc #>$800
+    sta.z dest_1+1
+    lda.z dest_1+2
+    adc #0
+    sta.z dest_1+2
+    lda.z dest_1+3
+    adc #0
+    sta.z dest_1+3
+    lda.z dest_1
+    sta.z dma_copy.dest
+    lda.z dest_1+1
+    sta.z dma_copy.dest+1
+    lda.z dest_1+2
+    sta.z dma_copy.dest+2
+    lda.z dest_1+3
+    sta.z dma_copy.dest+3
+    lda #<$800
+    sta.z dma_copy.src
+    lda #>$800
+    sta.z dma_copy.src+1
+    lda #<$800>>$10
+    sta.z dma_copy.src+2
+    lda #>$800>>$10
+    sta.z dma_copy.src+3
+    lda #<$1800
+    sta.z dma_copy.length
+    lda #>$1800
+    sta.z dma_copy.length+1
+    jsr dma_copy
+    // Load stored CPU state into Hypervisor saved register area at $FFD3640
+    ldy #OFFSET_STRUCT_PROCESS_DESCRIPTOR_BLOCK_STORED_STATE
+    lda (p),y
+    sta.z ss
+    iny
+    lda (p),y
+    sta.z ss+1
+    lda #<0
+    sta.z i
+    sta.z i+1
+  //XXX - Use a for() loop to copy 63 bytes from ((unsigned char *)$D640)[0] to ss[0]--ss[62]
+  //      -- ((unsigned char *)$D640)[62] (dma_copy doesn't work for this for some slightly
+  //      complex reasons.)     
+  __b1:
+    lda.z i+1
+    cmp #>$3f
+    bcc __b2
+    bne !+
+    lda.z i
+    cmp #<$3f
+    bcc __b2
+  !:
+    // Set state of process to running
+    //XXX - Set p->process_state to STATE_READY
+    lda #STATE_READY
+    ldy #OFFSET_STRUCT_PROCESS_DESCRIPTOR_BLOCK_PROCESS_STATE
+    sta (p),y
+    // Mark this PDB as the running process
+    //XXX - Erase running pdb value
+    lda #0
+    sta.z running_pdb
+    rts
+  __b2:
+    lda #<$d640
+    clc
+    adc.z i
+    sta.z __15
+    lda #>$d640
+    adc.z i+1
+    sta.z __15+1
+    lda.z ss
+    clc
+    adc.z i
+    sta.z __16
+    lda.z ss+1
+    adc.z i+1
+    sta.z __16+1
+    ldy #0
+    lda (__15),y
+    sta (__16),y
+    inc.z i
+    bne !+
+    inc.z i+1
+  !:
+    jmp __b1
+}
+/* showid from osabi.kc */
+syscall06: {
+    .label __1 = $c1
+    .label __2 = $c1
+    .label pdb = $c1
+    lda.z running_pdb
+    sta.z __1
+    lda #0
+    sta.z __1+1
+    lda.z __2
+    sta.z __2+1
+    lda #0
+    sta.z __2
+    clc
+    lda.z pdb
+    adc #<stored_pdbs
+    sta.z pdb
+    lda.z pdb+1
+    adc #>stored_pdbs
+    sta.z pdb+1
+    lda #<message
+    sta.z print_to_screen.c
+    lda #>message
+    sta.z print_to_screen.c+1
+    jsr print_to_screen
+    ldy #0
+    lda (pdb),y
+    sta.z print_hex.value
+    tya
+    sta.z print_hex.value+1
+    jsr print_hex
+    lda #<message1
+    sta.z print_to_screen.c
+    lda #>message1
+    sta.z print_to_screen.c+1
+    jsr print_to_screen
+    lda.z running_pdb
+    sta.z print_hex.value
+    lda #0
+    sta.z print_hex.value+1
+    jsr print_hex
+    jsr print_newline
+    jsr exit_hypervisor
+    rts
+  .segment Data
+    message: .text "you are pid "
+    .byte 0
+    message1: .text " in pdb "
+    .byte 0
+}
+.segment Code
+/* yield from osabi.kc */
+syscall05: {
+    jsr yield
+    jsr exit_hypervisor
+    rts
+}
+yield: {
+    .label __3 = $c4
+    .label __4 = $c4
+    .label prev_pdb_number = $c3
+    .label pdb = $c4
+    .label i = $2c
+    lda.z running_pdb
+    sta.z prev_pdb_number
+    lda.z running_pdb
+    jsr pause_pdb
+    lda #0
+    sta.z i
+  __b1:
+    lda.z i
+    cmp #8
+    bcc __b2
+    rts
+  __b2:
+    lda.z i
+    sta.z __3
+    lda #0
+    sta.z __3+1
+    lda.z __4
+    sta.z __4+1
+    lda #0
+    sta.z __4
+    clc
+    lda.z pdb
+    adc #<stored_pdbs
+    sta.z pdb
+    lda.z pdb+1
+    adc #>stored_pdbs
+    sta.z pdb+1
+    ldy #OFFSET_STRUCT_PROCESS_DESCRIPTOR_BLOCK_PROCESS_STATE
+    lda (pdb),y
+    cmp #STATE_READY
+    bne __b3
+    lda.z prev_pdb_number
+    cmp.z i
+    bne __b4
+    jmp __b3
+  __b4:
+    lda.z i
+    sta.z resume_pdb.pdb_number
+    jsr resume_pdb
+  __b3:
+    inc.z i
+    jmp __b1
+}
+syscall04: {
+    jsr exit_hypervisor
+    rts
+}
+/* process_info from osabi.kc */
+syscall03: {
+    ldx.z running_pdb
+    jsr describe_pdb
+    jsr exit_hypervisor
+    rts
+}
 syscall02: {
     jsr exit_hypervisor
     rts
@@ -2334,7 +2383,7 @@ syscall00: {
     rts
 }
 .segment Data
-  MESSAGE: .text "checkpoint 5.4"
+  MESSAGE: .text "checkpoint 5.5"
   .byte 0
 .segment Syscall
   // Now we can have a nice table of up to 64 SYSCALL handlers expressed
