@@ -5,9 +5,10 @@ void main()
 	if (fork()) {
 		// We show only PID and PDB in parent
 		showpid();
+		exec("program4.prg");
 	} else {
 	// We show info in child process
-	exec("program4.prg");
+		exec("program4.prg");
 	}
 
 	while(true) yield();
