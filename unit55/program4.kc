@@ -1,7 +1,0 @@
-import "osabi"
-
-void main()
-{
-	process_info();
-	end_program();
-}
