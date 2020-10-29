@@ -2,6 +2,7 @@
 // Each function of the kernal is a no-args function
 // The functions are placed in the SYSCALLS table surrounded by JMP and NOP
 
+
 #pragma cpu(rom6502)
 
 import "string"

@@ -11,10 +11,30 @@ main: {
     jmp __b3
   __b1:
     jsr showpid
-    jsr exec
     jmp __b3
     program_name: .text "program4.prg"
     .byte 0
+}
+showpid: {
+    jsr enable_syscalls
+    lda #0
+    sta $d646
+    nop
+    rts
+}
+enable_syscalls: {
+    lda #$47
+    sta $d02f
+    lda #$53
+    sta $d02f
+    rts
+}
+yield: {
+    jsr enable_syscalls
+    lda #0
+    sta $d645
+    nop
+    rts
 }
 exec: {
     .label tr_area = $300
@@ -114,27 +134,6 @@ exec: {
     inc.z i+1
   !:
     jmp __b1
-}
-enable_syscalls: {
-    lda #$47
-    sta $d02f
-    lda #$53
-    sta $d02f
-    rts
-}
-showpid: {
-    jsr enable_syscalls
-    lda #0
-    sta $d646
-    nop
-    rts
-}
-yield: {
-    jsr enable_syscalls
-    lda #0
-    sta $d645
-    nop
-    rts
 }
 fork: {
     jsr enable_syscalls
