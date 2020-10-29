@@ -877,7 +877,7 @@ syscall00: {
     rts
 }
 .segment Data
-  MESSAGE: .text "checkpoint 5.2 gard0500"
+  MESSAGE: .text "checkpoint 5.2 alan0310"
   .byte 0
 .segment Syscall
   // Now we can have a nice table of up to 64 SYSCALL handlers expressed
