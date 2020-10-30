@@ -2,3 +2,6 @@
 ./unit4/uart.sock
 ./unit3/uart.sock
 ./unit2/uart.sock
+./.gitignore
+./unit2/dump.mem
+  
